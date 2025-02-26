@@ -1,13 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Git Class</title>
-</head>
-<body>
-    <p>Hello From The Git Class</p>
-    <p>Hello from aptech</p>
-    <h1>Tommorow is our test</h1>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laptop Inventory</title>
+  </head>
+
+  <body>
+    <h2>Add a Laptop</h2>
+    <form id="laptopForm">
+      <label for="name">Laptop Name:</label>
+      <input type="text" id="name" required />
+      <label for="brand">Brand:</label>
+      <input type="text" id="brand" required />
+      <button type="submit">Add Laptop</button>
+    </form>
+
+    <h2>Available Laptops</h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Brand</th>
+          <th>Available</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="laptopTable"></tbody>
+    </table>
+
+    <script>
+      const API_URL = "http://localhost:3000/laptops"; // Backend URL
+
+      async function fetchLaptops() {
+        try {
+          const response = await fetch(API_URL);
+          if (!response.ok) throw new Error("Failed to fetch laptops");
+
+          const laptops = await response.json();
+          const laptopTable = document.getElementById("laptopTable");
+          laptopTable.innerHTML = "";
+
+          laptops.forEach((laptop) => {
+            laptopTable.innerHTML += `
+              <tr>
+                <td>${laptop.id}</td>
+                <td>${laptop.name}</td>
+                <td>${laptop.brand}</td>
+                <td>${laptop.available ? "Yes" : "No"}</td>
+                <td>
+                  <button onclick="updateAvailability(${
+                    laptop.id
+                  }, ${!laptop.available})">
+                    Mark as ${laptop.available ? "Unavailable" : "Available"}
+                  </button>
+                </td>
+              </tr>
+            `;
+          });
+        } catch (error) {
+          console.error("Error fetching laptops:", error);
+          alert("Failed to load laptops.");
+        }
+      }
+
+      document
+        .getElementById("laptopForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const name = document.getElementById("name").value;
+          const brand = document.getElementById("brand").value;
+
+          try {
+            const response = await fetch(API_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name,
+                brand,
+              }),
+            });
+
+            if (!response.ok) throw new Error("Failed to add laptop");
+
+            alert("Laptop added successfully!");
+            e.target.reset();
+            fetchLaptops();
+          } catch (error) {
+            console.error("Error adding laptop:", error);
+            alert("Failed to add laptop.");
+          }
+        });
+
+      async function updateAvailability(id, available) {
+        try {
+          const response = await fetch(`${API_URL}/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              available,
+            }),
+          });
+
+          if (!response.ok) throw new Error("Failed to update laptop");
+
+          fetchLaptops();
+        } catch (error) {
+          console.error("Error updating laptop:", error);
+          alert("Failed to update laptop.");
+        }
+      }
+
+      fetchLaptops();
+    </script>
+  </body>
 </html>
