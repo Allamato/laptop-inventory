@@ -70,6 +70,28 @@ app.post("/laptops", async (req, res) => {
   }
 });
 
+// ✅ Edit laptop name and brand
+app.patch("/laptops/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, brand } = req.body;
+
+  try {
+    const result = await client.query(
+      "UPDATE laptops SET name = $1, brand = $2 WHERE id = $3 RETURNING *",
+      [name, brand, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Laptop not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("❌ Error updating laptop details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // ✅ Update laptop availability
 app.put("/laptops/:id", async (req, res) => {
   const { id } = req.params;
